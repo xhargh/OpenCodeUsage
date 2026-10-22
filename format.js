@@ -13,12 +13,14 @@ export function resetTime(timestamp) {
 
 export function formatUsage(usage, provider = 'Codex') {
   if (usage.copilot || usage.go) {
-    return [
-      `Codex usage\n${formatUsage({ windows: usage.windows, error: usage.error })}`,
-      ...(usage.copilot ? [`Copilot usage\n${formatUsage(usage.copilot, 'Copilot')}`] : []),
-      ...(usage.go ? [`OpenCode Go usage\n${formatUsage(usage.go, 'OpenCode Go')}`] : []),
-    ].join('\n\n');
+    const sections = [
+      !usage.hidden && `Codex usage\n${formatUsage({ windows: usage.windows, error: usage.error })}`,
+      usage.copilot && !usage.copilot.hidden && `Copilot usage\n${formatUsage(usage.copilot, 'Copilot')}`,
+      usage.go && !usage.go.hidden && `OpenCode Go usage\n${formatUsage(usage.go, 'OpenCode Go')}`,
+    ].filter(Boolean);
+    return sections.length ? sections.join('\n\n') : 'No connected and enabled usage providers.';
   }
+  if (usage.hidden) return '';
   if (usage.error) return `${provider} usage unavailable: ${usage.error}`;
   return usage.windows.map(window =>
     window.unlimited ? `${`${window.label}:`.padEnd(21)}Unlimited`

@@ -34,7 +34,7 @@ export function createCopilotReader(integration, fetcher = fetch) {
     } catch {
       return { windows: [], error: 'Could not resolve your Copilot connection.' };
     }
-    if (!connection) return { windows: [], error: 'Sign in with GitHub Copilot using /connect first.' };
+    if (!connection) return { windows: [], hidden: true };
     const key = JSON.stringify(connection);
     if (!force && cached && key === cachedConnection && Date.now() - checked < 15000) return cached;
     if (pending?.key === key) return pending.promise;

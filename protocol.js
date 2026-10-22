@@ -18,6 +18,7 @@ const snapshot = {
       },
     },
     error: { type: 'string' },
+    hidden: { type: 'boolean' },
   },
   required: ['windows'],
   additionalProperties: false,

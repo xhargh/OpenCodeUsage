@@ -6,6 +6,7 @@ OpenCode V2 plugin displaying ChatGPT/Codex, GitHub Copilot, and OpenCode Go usa
 - **Copilot:** appears below Codex with premium-request, chat, and completion quotas. Unlimited quotas are labeled explicitly, without a misleading percentage or reset time. Provider errors are independent.
 - **OpenCode Go:** appears below Copilot with 5-hour, weekly, and monthly allowances from the Console's Go meters (Go or Go Plus). No hardcoded plan prices or locally estimated spend.
 - **`/usage`:** fetches fresh limits and shows them once in a dismissible dialog (Esc or click outside), without invoking a model or adding a message to the conversation.
+- **Visibility:** each provider's section appears only when that provider is both connected and enabled in OpenCode. Signed-out or disabled providers are omitted entirely.
 
 Installed here as a global, automatically discovered plugin. Restart the terminal UI if its sidebar contribution does not appear. The sidebar is only visible when the terminal is wide enough.
 

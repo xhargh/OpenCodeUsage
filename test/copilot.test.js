@@ -94,7 +94,7 @@ test('Copilot account changes and sign-out never reuse another account cache', a
   await reader();
   assert.equal(calls, 2);
   id = undefined;
-  assert.match((await reader()).error, /Sign in/);
+  assert.equal((await reader()).hidden, true);
 });
 
 test('Copilot handles auth, network, malformed response and resolver failures safely', async () => {

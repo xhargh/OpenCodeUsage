@@ -136,7 +136,7 @@ test('Go account switching and sign-out invalidate previous usage', async () => 
   await reader();
   assert.equal(calls, 2);
   id = undefined;
-  assert.match((await reader()).error, /Connect/);
+  assert.equal((await reader()).hidden, true);
 });
 
 test('Go reports denied access without exposing bodies or credentials', async () => {

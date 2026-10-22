@@ -40,7 +40,7 @@ export function createUsageReader(integration, fetcher = fetch) {
 
   return async function readUsage(force = false) {
     const connection = await integration.connection.active('openai');
-    if (!connection) return { windows: [], error: 'Sign in with ChatGPT using /connect first.' };
+    if (!connection) return { windows: [], hidden: true };
     const key = JSON.stringify(connection);
     if (!force && cached && key === cachedConnection && Date.now() - checked < 15000) return cached;
     if (pending?.key === key) return pending.promise;

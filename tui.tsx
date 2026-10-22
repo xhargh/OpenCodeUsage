@@ -6,6 +6,7 @@ import { Usage } from './protocol.js';
 type Snapshot = {
   windows: { label: string; remaining: number | null; resetAt: number | null; unlimited?: boolean }[];
   error?: string;
+  hidden?: boolean;
   copilot?: Snapshot;
   go?: Snapshot;
 };
@@ -66,15 +67,20 @@ export default Plugin.define({
         pending = false;
       }
     }
+    const sections = () => {
+      const visible = (title: string, snapshot?: Snapshot) =>
+        snapshot && !snapshot.hidden ? [{ title, snapshot }] : [];
+      return [
+        ...visible('Codex usage', usage()),
+        ...visible('Copilot usage', usage().copilot),
+        ...visible('OpenCode Go usage', usage().go),
+      ];
+    };
     const removeSlot = context.ui.slot({
       append: 'sidebar.content',
       render: () => (
         <box flexDirection="column" gap={1} paddingTop={1}>
-          <For each={[
-            { title: 'Codex usage', snapshot: usage() },
-            { title: 'Copilot usage', snapshot: usage().copilot ?? { windows: [], error: 'Loading…' } },
-            { title: 'OpenCode Go usage', snapshot: usage().go ?? { windows: [], error: 'Loading…' } },
-          ]}>{section => (
+          <For each={sections()}>{section => (
             <box flexDirection="column" gap={1}>
               <text fg={context.theme.text.base}><b>{section.title}</b></text>
               <Show when={!section.snapshot.error} fallback={<text fg={context.theme.text.weak}>{section.snapshot.error}</text>}>

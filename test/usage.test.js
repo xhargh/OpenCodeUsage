@@ -80,11 +80,13 @@ test('account switching invalidates cached usage', async () => {
   assert.equal(calls, 2);
 });
 
-test('reports missing sign-in and API keys without fetching', async () => {
+test('hides missing sign-in but reports API keys without fetching', async () => {
   const noFetch = () => { throw new Error('Should not fetch'); };
   const source = integration();
   source.connection.active = async () => undefined;
-  assert.match((await createUsageReader(source, noFetch)()).error, /Sign in/);
+  const missing = await createUsageReader(source, noFetch)();
+  assert.equal(missing.hidden, true);
+  assert.deepEqual(missing.windows, []);
   assert.match((await createUsageReader(integration({ type: 'key', key: 'secret' }), noFetch)()).error, /OAuth/);
 });
 
@@ -98,6 +100,26 @@ test('HTTP and network failures are safe, readable, and never leak response bodi
   }
   const reader = createUsageReader(integration(), async () => { throw new Error('secret test-access'); });
   assert.ok(!(await reader()).error.includes('test-access'));
+});
+
+test('formats only providers that are connected and enabled', () => {
+  assert.equal(
+    formatUsage({
+      windows: [],
+      hidden: true,
+      copilot: { windows: [], hidden: true },
+      go: { windows: [], hidden: true },
+    }),
+    'No connected and enabled usage providers.',
+  );
+  const copilot = { windows: [{ label: 'Chat', remaining: null, resetAt: null, unlimited: true }] };
+  const text = formatUsage({ windows: [], hidden: true, copilot });
+  assert.doesNotMatch(text, /Codex usage/);
+  assert.match(text, /^Copilot usage\n/);
+  assert.match(text, /Chat: +Unlimited/);
+  const onlyCodex = formatUsage({ windows: [{ label: '5h limit', remaining: 62, resetAt: null }], go: { windows: [], hidden: true } });
+  assert.match(onlyCodex, /^Codex usage\n/);
+  assert.doesNotMatch(onlyCodex, /OpenCode Go usage/);
 });
 
 test('reads account IDs from metadata or token-sharing JWT claims', () => {
