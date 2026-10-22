@@ -23,6 +23,11 @@ test('parses used percentages into remaining 5-hour and weekly limits', () => {
   assert.equal(progressBar(100), `[${'█'.repeat(20)}]`);
 });
 
+test('progressBar renders an empty bar for non-numeric input', () => {
+  assert.equal(progressBar(null), `[${'░'.repeat(20)}]`);
+  assert.equal(progressBar(undefined), `[${'░'.repeat(20)}]`);
+});
+
 test('formats aligned rows and reset times in the local timezone', () => {
   const date = new Date(2026, 9, 23, 0, 8);
   const usage = { windows: [{ label: '5h limit', remaining: 62, resetAt: date.getTime() / 1000 }] };
@@ -42,6 +47,17 @@ test('handles nonstandard durations, clamping and relative reset timestamps', ()
     used_percent: 110, limit_window_seconds: 3600, reset_after_seconds: 60,
   } } }, 100000);
   assert.deepEqual(result.windows, [{ label: '1h limit', remaining: 0, resetAt: 160 }]);
+});
+
+test('parses string reset_at as unix seconds or ISO dates', () => {
+  const numeric = parseUsage({ rate_limit: { primary_window: {
+    used_percent: 10, limit_window_seconds: 18000, reset_at: '1792710480',
+  } } });
+  assert.equal(numeric.windows[0].resetAt, 1792710480);
+  const iso = parseUsage({ rate_limit: { primary_window: {
+    used_percent: 10, limit_window_seconds: 18000, reset_at: '2026-10-23T00:00:00Z',
+  } } });
+  assert.equal(iso.windows[0].resetAt, Date.parse('2026-10-23T00:00:00Z') / 1000);
 });
 
 test('resolves OAuth credentials server-side and only sends them to ChatGPT', async () => {

@@ -1,5 +1,7 @@
 export function progressBar(remaining) {
-  const filled = Math.round(Math.max(0, Math.min(100, remaining)) / 5);
+  const value = Number(remaining);
+  if (!Number.isFinite(value)) return `[${'░'.repeat(20)}]`;
+  const filled = Math.round(Math.max(0, Math.min(100, value)) / 5);
   return `[${'█'.repeat(filled)}${'░'.repeat(20 - filled)}]`;
 }
 

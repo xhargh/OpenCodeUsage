@@ -31,6 +31,12 @@ test('Go reads 5-hour, weekly and monthly remaining percentages', () => {
   assert.deepEqual(parseGoUsage({ ...payload, product: 'go-plus' }), result);
 });
 
+test('Go accepts a numeric reset timestamp in unix seconds', () => {
+  const status = structuredClone(payload);
+  status.access.meters.fiveHour.resetsAt = 1792710480;
+  assert.equal(parseGoUsage(status).windows[0].resetAt, 1792710480);
+});
+
 test('Go handles idle windows and exhausted allowances without inventing reset dates', () => {
   const status = structuredClone(payload);
   status.access.meters.fiveHour.resetsAt = null;

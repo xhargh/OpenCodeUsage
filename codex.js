@@ -1,6 +1,18 @@
 // This endpoint is used by Codex, not the metered OpenAI API.
 const ENDPOINT = 'https://chatgpt.com/backend-api/wham/usage';
 
+// `reset_at` is undocumented; accept unix seconds (number or numeric string)
+// or an ISO date string, otherwise fall back to a relative reset.
+function resetTimestamp(value) {
+  if (Number.isFinite(value)) return value;
+  if (typeof value === 'string' && /^\d+$/.test(value)) return Number(value);
+  if (typeof value === 'string') {
+    const parsed = Date.parse(value);
+    if (Number.isFinite(parsed)) return parsed / 1000;
+  }
+  return null;
+}
+
 export function parseUsage(body, now = Date.now()) {
   const limits = body?.rate_limit;
   const windows = [limits?.primary_window, limits?.secondary_window]
@@ -13,8 +25,8 @@ export function parseUsage(body, now = Date.now()) {
       const label = seconds === 18000 ? '5h limit'
         : seconds === 604800 ? 'Weekly limit'
         : seconds % 3600 === 0 ? `${seconds / 3600}h limit` : `${seconds / 60}m limit`;
-      const resetAt = Number.isFinite(window.reset_at) ? window.reset_at
-        : Number.isFinite(window.reset_after_seconds) ? Math.floor(now / 1000) + window.reset_after_seconds : null;
+      const resetAt = resetTimestamp(window.reset_at)
+        ?? (Number.isFinite(window.reset_after_seconds) ? Math.floor(now / 1000) + window.reset_after_seconds : null);
       return { label, remaining: Math.round(Math.max(0, Math.min(100, 100 - window.used_percent))), resetAt };
     });
   if (!windows.length) throw new Error('No Codex usage limits returned for this account.');
@@ -39,7 +51,12 @@ export function createUsageReader(integration, fetcher = fetch) {
   let checked = 0;
 
   return async function readUsage(force = false) {
-    const connection = await integration.connection.active('openai');
+    let connection;
+    try {
+      connection = await integration.connection.active('openai');
+    } catch {
+      return { windows: [], error: 'Could not resolve your ChatGPT connection.' };
+    }
     if (!connection) return { windows: [], hidden: true };
     const key = JSON.stringify(connection);
     if (!force && cached && key === cachedConnection && Date.now() - checked < 15000) return cached;

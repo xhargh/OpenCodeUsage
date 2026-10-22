@@ -18,7 +18,9 @@ export function parseGoUsage(status) {
     if (!Number.isFinite(limit) || limit <= 0 || !Number.isFinite(used) || used < 0) {
       throw new Error('Unexpected OpenCode Go usage response.');
     }
-    const reset = typeof meter.resetsAt === 'string' ? Date.parse(meter.resetsAt) : NaN;
+    // Reset timestamps are ISO strings today; also accept unix seconds.
+    const reset = typeof meter.resetsAt === 'string' ? Date.parse(meter.resetsAt)
+      : Number.isFinite(meter.resetsAt) ? meter.resetsAt * 1000 : NaN;
     return {
       label,
       remaining: Math.round(Math.max(0, Math.min(100, (1 - used / limit) * 100))),
@@ -68,9 +70,7 @@ export function createGoReader(integration, fetcher = fetch) {
       redirect: 'error',
     });
     if (!response.ok) {
-      const error = new Error(await responseError(response));
-      error.status = response.status;
-      throw error;
+      throw new Error(await responseError(response));
     }
     return parseGoUsage(await response.json());
   }
