@@ -86,10 +86,11 @@ export default Plugin.define({
                 children: jsx('b', { get children() { return section.title; } }),
               }),
               jsx(Show, {
-                get when() { return !!section.snapshot.credits; },
-                children: jsx('text', {
+                get when() { return section.snapshot.credits; },
+                keyed: true,
+                children: credits => jsx('text', {
                   get fg() { return context.theme.text.base; },
-                  get children() { return `AI credits: ${formatCredits(section.snapshot.credits)}`; },
+                  children: `AI credits: ${formatCredits(credits)}`,
                 }),
               }),
               jsx(Show, {
