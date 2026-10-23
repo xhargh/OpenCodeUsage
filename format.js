@@ -13,6 +13,16 @@ export function resetTime(timestamp) {
   return `${time} on ${date.getDate()} ${month}`;
 }
 
+function formatNumber(value) {
+  if (!Number.isFinite(value)) return '—';
+  const rounded = Math.round(value * 10) / 10;
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+}
+
+export function formatCredits(credits) {
+  return `${formatNumber(credits.used)} / ${formatNumber(credits.total)}`;
+}
+
 export function formatUsage(usage, provider = 'Codex') {
   if (usage.copilot || usage.go) {
     const sections = [
@@ -24,8 +34,10 @@ export function formatUsage(usage, provider = 'Codex') {
   }
   if (usage.hidden) return '';
   if (usage.error) return `${provider} usage unavailable: ${usage.error}`;
-  return usage.windows.map(window =>
+  const lines = usage.windows.map(window =>
     window.unlimited ? `${`${window.label}:`.padEnd(21)}Unlimited`
       : `${`${window.label}:`.padEnd(21)}${progressBar(window.remaining)} ${window.remaining}% left (resets ${resetTime(window.resetAt)})`
-  ).join('\n');
+  );
+  if (usage.credits) lines.unshift(`${'AI credits:'.padEnd(21)}${formatCredits(usage.credits)}`);
+  return lines.join('\n');
 }

@@ -25,7 +25,7 @@ opencode plugin add github:xhargh/OpenCodeUsage
 ## Features
 
 - **Sidebar:** remaining limits, 20-cell bars, and local reset times. Refreshes every minute and after completed turns.
-- **Copilot:** appears below Codex with premium-request, chat, and completion quotas. Unlimited quotas are labeled explicitly, without a misleading percentage or reset time. Provider errors are independent.
+- **Copilot:** appears below Codex with AI-credit usage (`used / total`) and premium-request, chat, and completion quotas. Unlimited quotas are labeled explicitly, without a misleading percentage or reset time. Provider errors are independent.
 - **OpenCode Go:** appears below Copilot with 5-hour, weekly, and monthly allowances from the Console's Go meters (Go or Go Plus). No hardcoded plan prices or locally estimated spend.
 - **`/usage`:** fetches fresh limits and shows them once in a dismissible dialog (Esc or click outside), without invoking a model or adding a message to the conversation.
 - **Visibility:** each provider's section appears only when that provider is both connected and enabled in OpenCode. Signed-out or disabled providers are omitted entirely.

@@ -1,5 +1,16 @@
 const ENDPOINT = 'https://api.github.com/copilot_internal/user';
 
+// Usage-based Copilot plans report an AI-credit allowance on the premium
+// interactions quota as `credits_used` (consumed) and `entitlement` (total).
+// Legacy premium-request plans do not include `credits_used`, so credits are
+// omitted rather than approximated.
+function parseCredits(quota) {
+  const used = quota?.credits_used;
+  const total = quota?.entitlement;
+  if (!Number.isFinite(used) || used < 0 || !Number.isFinite(total) || total <= 0) return undefined;
+  return { used, total };
+}
+
 export function parseCopilotUsage(body) {
   const reset = Date.parse(body?.quota_reset_date_utc ?? body?.quota_reset_date);
   const resetAt = Number.isFinite(reset) ? reset / 1000 : null;
@@ -18,7 +29,8 @@ export function parseCopilotUsage(body) {
     return [{ label, remaining: Math.round(Math.max(0, Math.min(100, percent))), resetAt }];
   });
   if (!windows.length) throw new Error('No Copilot usage quotas returned for this account.');
-  return { windows };
+  const credits = parseCredits(body?.quota_snapshots?.premium_interactions);
+  return credits ? { windows, credits } : { windows };
 }
 
 export function createCopilotReader(integration, fetcher = fetch) {

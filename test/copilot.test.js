@@ -140,3 +140,38 @@ test('provider failures do not hide the other provider in /usage', () => {
   assert.match(formatUsage({ windows: [], error: 'Offline', copilot: parseCopilotUsage(payload) }), /Copilot usage\nPremium requests:/);
   assert.match(formatUsage({ windows: [{ label: '5h limit', remaining: 50, resetAt: null }], copilot: { windows: [], error: 'Offline' } }), /5h limit:.*50% left/);
 });
+
+test('Copilot exposes AI credits for usage-based plans', () => {
+  const result = parseCopilotUsage({ quota_snapshots: {
+    premium_interactions: { credits_used: 1303, entitlement: 2000, percent_remaining: 34.9, remaining: 697 },
+  } });
+  assert.deepEqual(result.credits, { used: 1303, total: 2000 });
+});
+
+test('Copilot omits credits for legacy premium-request plans', () => {
+  const result = parseCopilotUsage({ quota_snapshots: {
+    premium_interactions: { percent_remaining: 62.3, remaining: 187, entitlement: 300 },
+  } });
+  assert.equal(result.credits, undefined);
+});
+
+test('Copilot rejects unusable credit values instead of inventing them', () => {
+  for (const [credits_used, entitlement] of [[-1, 2000], [1303, 0], [NaN, 2000], [undefined, 2000], ['1303', 2000]]) {
+    const result = parseCopilotUsage({ quota_snapshots: {
+      premium_interactions: { credits_used, entitlement, percent_remaining: 50 },
+    } });
+    assert.equal(result.credits, undefined);
+  }
+});
+
+test('/usage prints AI credits above the Copilot quotas', () => {
+  const usage = {
+    windows: [{ label: '5h limit', remaining: 62, resetAt: null }],
+    copilot: parseCopilotUsage({ quota_snapshots: {
+      premium_interactions: { credits_used: 1303.36, entitlement: 2000, percent_remaining: 34.9 },
+    } }),
+  };
+  const text = formatUsage(usage);
+  assert.match(text, /AI credits:\s+1303\.4 \/ 2000/);
+  assert.ok(text.indexOf('AI credits:') < text.indexOf('Premium requests:'));
+});

@@ -1,5 +1,15 @@
 import { Rpc } from '@opencode/plugin/rpc';
 
+const credits = {
+  type: 'object',
+  properties: {
+    used: { type: 'number' },
+    total: { type: 'number' },
+  },
+  required: ['used', 'total'],
+  additionalProperties: false,
+};
+
 const snapshot = {
   type: 'object',
   properties: {
@@ -19,6 +29,7 @@ const snapshot = {
     },
     error: { type: 'string' },
     hidden: { type: 'boolean' },
+    credits,
   },
   required: ['windows'],
   additionalProperties: false,
